@@ -29,4 +29,8 @@ class Prediction():
 
 class Model():
     def get_model(model_path):
+        """
+        a fucntion that takes .h5 model path and returns the loaded model
+        """
         loaded_model = load_model(model_path)
+        return loaded_model
