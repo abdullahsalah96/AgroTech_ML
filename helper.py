@@ -9,7 +9,6 @@ import pandas as pd
 import glob
 import os
 
-
 class HelperCallbacks(tf.keras.callbacks.Callback):
     """
     A class that includers helper callback functions
