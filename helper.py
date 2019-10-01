@@ -54,7 +54,7 @@ class ImagesLoader():
         labels = np_utils.to_categorical(np.array(data['target']), numOfClasses) #one hot encoding the labels
         return images, labels
 
-    def path_to_tensor(self, img_path):
+    def path_to_tensor(self, img_path, normalize = True):
         """
         A funtion that takes the path of the image and converts it into a 4d tensor to be fed to the convolutional network
         """
@@ -64,16 +64,19 @@ class ImagesLoader():
         x = image.img_to_array(img)
         # print('img shape: ', x.shape[:])
         # convert 3D tensor to 4D tensor with shape (1, 32, 32, 1) and return 4D tensor
-        return np.expand_dims(x, axis=0)
+        if(normalize):
+            return np.expand_dims(x, axis=0)/255
+        else:
+            return np.expand_dims(x, axis=0)
 
     def paths_to_tensor(self, img_paths):
         """
         A funtion that takes the path of the images and converts them into a 4d tensor to be fed to the convolutional network and normalizes them
         """
         list_of_tensors = [self.path_to_tensor(img_path) for img_path in tqdm(img_paths)]
-        return np.vstack(list_of_tensors).astype('float32')/255
+        return np.vstack(list_of_tensors).astype('float32')
 
-class LabelsLoader():
+class Labels():
     def __init__(self):
         pass
     def concatenateAnnotationFiles(self, files_path):
@@ -145,42 +148,7 @@ class LabelsLoader():
 
     def oneHotEncode(self, labels, size):
         """"
-        A function that one hot encode the labels
+        A function that one hot encodes the labels
         """
         x_onehot = np.identity(size[1])[labels]
         return x_onehot
-
-# ann = LabelsLoader()
-# annotations = ann.getAnnotationsDataframe(r"/home/abdullahsalah96/Traffic Signs classifier/Training Annotations")
-# print(annotations)
-# resized_labels = ann.resizeBoundingBoxes(annotations, (32, 32))
-# print("--AFTER MODIFYING-- \n")
-# print(resized_labels)
-# labels = ann.getLabels(resized_labels)
-# print("--FINAL LABELS-- \n")
-# print(labels)
-
-
-# ann = LabelsLoader()
-# annotations = ann.getAnnotationsDataframe(r"/home/abdullahsalah96/Traffic Signs classifier/GTSRB_Final_Training_Images/GTSRB/Final_Training/Annotations")
-# print(annotations)
-# resized_labels = ann.resizeBoundingBoxes(annotations, (32, 32))
-# print("--AFTER MODIFYING-- \n")
-# print(resized_labels)
-# labels = ann.getLabels(resized_labels)
-#
-# print("--FINAL LABELS-- \n")
-# print(labels)
-#
-# getBoundingBoxes = ann.getBoundingBoxes(resized_labels)
-# print("--FINAL BOUDNING BOXES-- \n")
-# print(getBoundingBoxes)
-#
-# print("--ONE HOT ENCODED LABELS-- \n")
-# oneHotEncoded = ann.oneHotEncode(getBoundingBoxes, (32,32))
-# print(oneHotEncoded[1])
-
-# imageLoader = ImagesLoader()
-# train_images, tr_labels = imageLoader.load_images(r"/home/abdullahsalah96/Traffic Signs classifier/GTSRB_Final_Training_Images/GTSRB/Final_Training/Images")
-#
-# print(train_images.shape)
