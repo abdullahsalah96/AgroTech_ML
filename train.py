@@ -7,6 +7,7 @@ from keras.models import model_from_json
 from keras.optimizers import SGD, RMSprop
 from keras.callbacks import ModelCheckpoint
 from keras.preprocessing import image
+from keras.applications.vgg19 import VGG19
 from keras import metrics
 import numpy as np
 from glob import glob
@@ -14,25 +15,42 @@ from skimage import color
 from tqdm import tqdm
 import cv2
 import os
-# from utils import load_images, path_to_tensor, paths_to_tensor
 from helper import HelperCallbacks, HelperImageGenerator, ImagesLoader, LabelsLoader
+
+
+class BottleneckModel():
+    def __init__(self, pre_model, pooling, weights, input_shape, is_trainable):
+        self.pre_model = pre_model
+        self.model = Sequential()
+        self.pooling = pooling
+        self.weights = weigths
+        self.input_shape = input_shape
+        self.is_trainable = is_trainable
+
+    def load_bottleneck_model(self):
+        """
+        A function that returns the pre-trained model
+        """
+        self.model.add(self.pre_model(include_top = False, pooling = self.pooling, weights = self.weights, input_shape = self.input_shape))
+        if(self.is_trainable):
+            self.model.layers[0].trainable = True
+        else:
+            self.model.layers[0].trainable = False
+        return (self.model)
+
 
 #importing the training and testing images
 imageLoader = ImagesLoader()
-train_images, tr_labels = imageLoader.load_images(r"/home/abdullahsalah96/Traffic Signs classifier/GTSRB_Final_Training_Images/GTSRB/Final_Training/Images", 43)
-test_images, ts_labels = imageLoader.load_images(r"/home/abdullahsalah96/Traffic Signs classifier/GTSRB_Final_Test_Images/GTSRB/Final_Test/Images", 43)
-
-
-# train_images, tr_labels = imageLoader.load_images(r"/home/abdullahsalah96/Traffic Signs classifier/BelgiumTSC_Training/Training", 62)
-# test_images, ts_labels = imageLoader.load_images(r"/home/abdullahsalah96/Traffic Signs classifier/BelgiumTSC_Testing/Testing", 62)
+train_images, tr_labels = imageLoader.load_images(r"path to training images", 2)
+test_images, ts_labels = imageLoader.load_images(r"path to testing images", 2)
 
 #converting the training and testing images to 4d tensors to be fed to the convolutional layers
 train_tensors = imageLoader.paths_to_tensor(train_images).astype('float32')
 test_tensors = imageLoader.paths_to_tensor(test_images).astype('float32')
 
-ann = LabelsLoader()
+ann = Annotations()
 #getting training labels
-training_annotations = ann.getAnnotationsDataframe(r"/home/abdullahsalah96/Traffic Signs classifier/GTSRB_Final_Training_Images/GTSRB/Final_Training/Annotations")
+training_annotations = ann.getAnnotationsDataframe(r"path to training annotations")
 resized_training_annotations = ann.resizeBoundingBoxes(training_annotations, (32,32))
 training_labels = ann.getLabels(resized_training_annotations)
 training_bounding_boxes = ann.getBoundingBoxes(resized_training_annotations)
@@ -40,7 +58,7 @@ training_encoded_bounding_boxes = ann.oneHotEncode(training_bounding_boxes, (32,
 final_training_bounding_boxes = training_encoded_bounding_boxes.reshape([39209, 128]) #reshape bounding boxes where each 32 elements is a new point
 
 #getting testing labels
-testing_annotations = ann.getAnnotationsDataframe(r"/home/abdullahsalah96/Traffic Signs classifier/GTSRB_Final_Test_Images/GTSRB/Final_Test/Annotations")
+testing_annotations = ann.getAnnotationsDataframe(r"path to testing annotations")
 resized_testing_annotations = ann.resizeBoundingBoxes(testing_annotations, (32,32))
 testing_labels = ann.getLabels(resized_testing_annotations)
 testing_bounding_boxes = ann.getTestingBoundingBoxes(resized_testing_annotations)
@@ -59,56 +77,28 @@ print(final_training_bounding_boxes[0])
 print("--FINAL TESTING BOXES")
 print(testing_bounding_boxes)
 
+bottleneck = BottleneckModel(pre_model= = VGG19, pooling='avg', weigths = 'imagenet', input_shape=train_tensors.shape[1:], is_trainable=False)
+pre_model= = bottleneck.load_bottleneck_model()
 
-# #################bounding boxes prediction##################
-# # classification_model's architecture
-# classification_model = Sequential()
-# classification_model.add(Conv2D(filters = 16, kernel_size = 2, padding='same', strides = 1, activation = 'relu', input_shape = train_tensors.shape[1:]))
-# classification_model.add(Dropout(0.2))
-# classification_model.add(MaxPooling2D(pool_size = 2))
-# classification_model.add(Conv2D(filters = 32, kernel_size = 2, padding='same', strides = 1, activation = 'relu'))
-# classification_model.add(Dropout(0.2))
-# classification_model.add(MaxPooling2D(pool_size = 2))
-# classification_model.add(Conv2D(filters = 64, kernel_size = 2, padding='same', strides = 1, activation = 'relu'))
-# classification_model.add(Dropout(0.2))
-# classification_model.add(MaxPooling2D(pool_size = 2))
-# classification_model.add(Conv2D(filters = 128, kernel_size = 2, padding='same', strides = 1, activation = 'relu'))
-# classification_model.add(Dropout(0.2))
-# classification_model.add(MaxPooling2D(pool_size = 2))
-# classification_model.add(Conv2D(filters = 256, kernel_size = 2, padding='same', strides = 1, activation = 'relu'))
-# classification_model.add(Dropout(0.2))
-# classification_model.add(MaxPooling2D(pool_size = 2))
-# classification_model.add(Conv2D(filters = 512, kernel_size = 2, padding='same', strides = 1, activation = 'relu'))
-# classification_model.add(GlobalAveragePooling2D())
-# classification_model.add(Dropout(0.1))
-# classification_model.add(Dense(1024, activation='relu'))
-# classification_model.add(Dropout(0.2))
-# classification_model.add(Dense(512, activation = 'relu'))
-# classification_model.add(Dropout(0.2))
-# classification_model.add(Dense(256, activation = 'relu'))
-# classification_model.add(Dropout(0.2))
-# classification_model.add(Dense(4))
-# classification_model.summary()
-#
-# #compiling the classification_model
-# classification_model.compile(loss='mse', optimizer='adam', metrics=[metrics.mean_squared_error, metrics.mean_absolute_error, metrics.mean_absolute_percentage_error, metrics.cosine_proximity])
-# # #making a checkpointer
-# checkpointer = ModelCheckpoint(filepath = r'best_weights\final.hdf5', verbose = 1, save_best_only = True)
-# #
-# # #fitting the model
-# classification_model.fit(train_tensors, training_bounding_boxes, batch_size = 100, nb_epoch = 10, validation_split=0.2, callbacks=[checkpointer], shuffle = True)
-#
-# # saving the classification_model
-# classification_model.save("/home/abdullahsalah96/Traffic Signs classifier/model.h5")
-#
-# classification_model_json = classification_model.to_json()
-# with open("/home/abdullahsalah96/Traffic Signs classifier/classification_model.json", "w") as json_file:
-#     json_file.write(classification_model_json)
-# classification_model.save_weights("/home/abdullahsalah96/Traffic Signs classifier/classification_model.h5")
-# print("Saved classification_model to disk")
-#
-# score = classification_model.evaluate(test_tensors, testing_bounding_boxes, verbose = 1)
-# accuracy = score[1] *100 #score[0] returns loss value, score[1] returns the metrics value (accuracy)
-# print(r'\n\nAccuracy score: ', accuracy)
-#
-# #################bounding boxes prediction##################
+classification_model = pre_model
+classification_model.add(Dense(256, activation = 'relu'))
+classification_model.add(Dropout(0.2))
+classification_model.add(Dense(128, activation = 'relu'))
+classification_model.add(Dropout(0.2))
+classification_model.add(Dense(2, activation='softmax'))
+classification_model.summary()
+
+#compiling the classification_model
+classification_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+#making a checkpointer
+checkpointer = ModelCheckpoint(filepath = r'best_weights\final.hdf5', verbose = 1, save_best_only = True)
+
+#fitting the model
+classification_model.fit(train_tensors, tr_labels, batch_size = 100, nb_epoch = 20, validation_split=0.2, callbacks=[checkpointer], shuffle = True)
+
+# saving the classification_model
+classification_model.save("classification_model.h5")
+
+score = classification_model.evaluate(test_tensors, testing_bounding_boxes, verbose = 1)
+accuracy = score[1] *100 #score[0] returns loss value, score[1] returns the metrics value (accuracy)
+print(r'\n\ test loss: ', accuracy)

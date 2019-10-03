@@ -53,12 +53,12 @@ class ImagesLoader():
         labels = np_utils.to_categorical(np.array(data['target']), numOfClasses) #one hot encoding the labels
         return images, labels
 
-    def path_to_tensor(self, img_path, normalize = True):
+    def path_to_tensor(self, img_path, normalize = True, target_size):
         """
-        A funtion that takes the path of the image and converts it into a 4d tensor to be fed to the convolutional network
+        A funtion that takes the path of the image and converts it into a 4d tensor to be fed to the CNN and normalizes them
         """
         # loads RGB image as PIL.Image.Image type
-        img = image.load_img(img_path, target_size=(32, 32))
+        img = image.load_img(img_path, target_size=target_size)
         # convert PIL.Image.Image type to 3D tensor with shape (32, 32, 3)
         x = image.img_to_array(img)
         # print('img shape: ', x.shape[:])
@@ -68,16 +68,14 @@ class ImagesLoader():
         else:
             return np.expand_dims(x, axis=0)
 
-    def paths_to_tensor(self, img_paths):
+    def paths_to_tensor(self, img_paths, target_size):
         """
-        A funtion that takes the path of the images and converts them into a 4d tensor to be fed to the convolutional network and normalizes them
+        A funtion that takes the path of the images and converts them into a 4d tensor to be fed to the CNN
         """
-        list_of_tensors = [self.path_to_tensor(img_path) for img_path in tqdm(img_paths)]
+        list_of_tensors = [self.path_to_tensor(img_path, target_size) for img_path in tqdm(img_paths)]
         return np.vstack(list_of_tensors).astype('float32')
 
-class Labels():
-    def __init__(self):
-        pass
+class Annotations():
     def concatenateAnnotationFiles(self, files_path):
         """
         A function that takes the path of the annotation files and returns one csv file
