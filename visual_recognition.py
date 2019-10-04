@@ -1,7 +1,5 @@
 from watson_developer_cloud import VisualRecognitionV3
 import json
-from watson_developer_cloud import VisualRecognitionV3
-from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 import datetime
 
 class Model():
