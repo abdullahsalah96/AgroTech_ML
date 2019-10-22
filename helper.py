@@ -53,7 +53,7 @@ class ImagesLoader():
         labels = np_utils.to_categorical(np.array(data['target']), numOfClasses) #one hot encoding the labels
         return images, labels
 
-    def path_to_tensor(self, img_path, normalize = True, target_size):
+    def path_to_tensor(self, img_path, normalize, target_size):
         """
         A funtion that takes the path of the image and converts it into a 4d tensor to be fed to the CNN and normalizes them
         """
@@ -72,7 +72,7 @@ class ImagesLoader():
         """
         A funtion that takes the path of the images and converts them into a 4d tensor to be fed to the CNN
         """
-        list_of_tensors = [self.path_to_tensor(img_path, target_size) for img_path in tqdm(img_paths)]
+        list_of_tensors = [self.path_to_tensor(img_path, True, target_size) for img_path in tqdm(img_paths)]
         return np.vstack(list_of_tensors).astype('float32')
 
 class Annotations():
